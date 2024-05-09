@@ -16,7 +16,7 @@
 %%%PACKAGES%%%
 \usepackage{subfig} % make it possible to include more than one captioned figure/table in a single float
 \usepackage{amsmath} % mathematics
-
+\usepackage{amssymb}
 
 %%% HEADERS & FOOTERS
 \usepackage{fancyhdr} % This should be set AFTER setting up the page geometry
@@ -66,9 +66,16 @@
 	\section*{Problem 1.2)}
 	$p(x) = \int p(x,y) dy$
 	\section*{Problem 1.3)}
-
+	$\mathbb{E}\left[X,Y\right] = \int_{Y} \int_{X} yxp(x,y) dxdy = \int_{Y} \int_{X} yxp(x)p(y) dxdy = \int_{Y} yp(y) \int_{X} xp(x) dxdy = \int_{Y} yp(y) dy\int_{X} xp(x) dx = \mathbb{E}\left[Y\right]\mathbb{E}\left[X\right]$\\
 	\section*{Problem 1.4)}
-
+	$p(C=R \lvert B=1) = 0.4$\\
+	$p(C=W \lvert B=1) = 0.6$\\
+	$p(C=R \lvert B=2) = \frac{3}{7}$\\
+	$p(C=R \lvert B=2) = \frac{4}{7}$\\
+	$p(B=1) = 0.5$\\
+	$p(B=2) = 0.5$\\
+	$p(C=R) = p(C=R \lvert B=1) \cdot p(B=1) + p(C=R \lvert B=2) \cdot p(B=2) = 0.4 \cdot 0.5 + \frac{3}{7}\cdot 0.5 = 0.41428$\\
+	$p(B=1 \lvert C=R) = \frac{p(C=R \lvert B=1)p(B=1)}{p(C=R)} = \frac{0.4 \cdot 0.5}{0.41428} = 0.482758$\\
 	\section*{Problem 2.1)}
 	
 	\section*{Problem 2.2)}
