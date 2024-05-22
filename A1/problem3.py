@@ -7,8 +7,14 @@ np.random.seed(seed=2022)
 # input (rgb): numpy array of shape (H, W, 3)
 # output (gray): numpy array of shape (H, W)
 def rgb2gray(rgb):
+	#im  = Image.fromarray(np.uint8(rgb*255)).convert('RGB')
+	#im.show()
+	
 	weights = np.array([0.2126, 0.7152, 0.0722])
 	gray = np.dot(rgb[...,:3], weights)
+	
+	#im  = Image.fromarray(np.uint8(gray*255)).convert('RGB')
+	#im.show()
 	return gray
 
 # load the data
@@ -29,10 +35,22 @@ def load_data(i0_path, i1_path, gt_path):
 # input (d): numpy array of shape (H, W)
 # output (img_crop): numpy array of shape (H', W')
 def crop_image(img, d):
+	
+	#im  = Image.fromarray(np.uint8(d*255)).convert('RGB')
+	#im.show()
+	
+	#im  = Image.fromarray(np.uint8(img*255)).convert('RGB')
+	#im.show()
+	
 	rows, cols = np.where(d > 0) # identify the region where the disparity is defined
 	row_min, row_max = np.min(rows), np.max(rows)
 	col_min, col_max = np.min(cols), np.max(cols)
+	
+	#print(row_min," ",row_max," ",col_min," ",col_max)
 	img_crop = img[row_min:row_max+1, col_min:col_max+1]
+	
+	#im  = Image.fromarray(np.uint8(img_crop*255)).convert('RGB')
+	#im.show()
 	return img_crop
 
 # shift all pixels of i1 by the value of the disparity map
@@ -43,12 +61,19 @@ def shift_disparity(i_1,d):
 	height, width = i_1.shape
 	x, y = np.meshgrid(np.arange(width), np.arange(height)) # create a grid of pixel indices 
 	# subtract the disparity map from the x indices since we are dealing with horizontal shifts between the left and right images
+	#d = np.full((height,width),100)
 	x = x - d.astype(int) 
 	# ensure we won't try to access pixels that are outside the boundaries of the image
 	x = np.clip(x, 0, width - 1)
 	y = np.clip(y, 0, height - 1)
 
 	i_d = i_1[y, x]
+	
+	#im  = Image.fromarray(np.uint8(i_1*255)).convert('RGB')
+	#im.show()
+	
+	#im  = Image.fromarray(np.uint8(i_d*255)).convert('RGB')
+	#im.show()
 
 	return i_d
 
@@ -84,10 +109,20 @@ def laplacian_nllh(i_0, i_1_d, mu,s):
 # output (img_noise): numpy array of shape (H, W)
 def make_noise(img, p):
 	img_noise = img.copy()
-	num_pixels = int(p * img.size) # number of pixels to modify
+	
+	#p=0.8
+	
+	num_pixels = int((p/100) * img.size) # number of pixels to modify
 	num_pixels = min(num_pixels, img.size) # ensure they do not exceed img.size
 	indices = np.random.choice(np.arange(img.size), replace=False, size=num_pixels) # choose pixel indices randomly
 	img_noise.flat[indices] = np.random.normal(0.45, 0.14, size=num_pixels) # replace the chosen ones with values from a normal distribution
+	
+	#im  = Image.fromarray(np.uint8(img*255)).convert('RGB')
+	#im.show(title='Orig')
+
+	#im  = Image.fromarray(np.uint8(img_noise*255)).convert('RGB')
+	#im.show(title='Noise')
+	
 	return img_noise
 
 # apply noise to i1_sh and return the values of the negative lok-likelihood for both likelihood models with mu, sigma, and s
@@ -99,14 +134,21 @@ def make_noise(img, p):
 # input (s): float
 # output (gnllh) - gaussian negative log-likelihood: numpy scalar of shape ()
 # output (lnllh) - laplacian negative log-likelihood: numpy scalar of shape ()
-def get_nllh_for_corrupted(i_0, i_1_d, noise, mu, sigma, s):
-    i_1_d_noise = make_noise(i_1_d, noise)
+def get_nllh_for_corrupted(i0, i1_sh, noise, mu, sigma, s):
+	
+	#im  = Image.fromarray(np.uint8(i1_sh*255)).convert('RGB')
+	#im.show(title='Noise')
+	i_1_d_noise = make_noise(i1_sh, noise)
+	#im  = Image.fromarray(np.uint8(i_1_d_noise*255)).convert('RGB')
+	#im.show(title='Noise')
+
+	#raise ValueError("temp stop")
 
     # gaussian and laplacian negative log-likelihoods
-    gnllh = gaussian_nllh(i_0, i_1_d_noise, mu, sigma)
-    lnllh = laplacian_nllh(i_0, i_1_d_noise, mu, s)
+	gnllh = gaussian_nllh(i0, i_1_d_noise, mu, sigma)
+	lnllh = laplacian_nllh(i0, i_1_d_noise, mu, s)
 	
-    return gnllh, lnllh
+	return gnllh, lnllh
 
 # DO NOT CHANGE
 def main():
@@ -125,8 +167,8 @@ def main():
 	sigma = 1.4
 	s = 1.4
 	for noise in [0.0, 14.0, 27.0]:
-
 		gnllh, lnllh = get_nllh_for_corrupted(i0, i1_sh, noise, mu, sigma, s)
+		print("noise:",noise,"  gaus:",gnllh,"  lapl:",lnllh)
 
 if __name__ == "__main__":
 	main()

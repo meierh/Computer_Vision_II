@@ -71,7 +71,7 @@
 	$p(C=R \lvert B=1) = 0.4$\\
 	$p(C=W \lvert B=1) = 0.6$\\
 	$p(C=R \lvert B=2) = \frac{3}{7}$\\
-	$p(C=R \lvert B=2) = \frac{4}{7}$\\
+	$p(C=W \lvert B=2) = \frac{4}{7}$\\
 	$p(B=1) = 0.5$\\
 	$p(B=2) = 0.5$\\
 	$p(C=R) = p(C=R \lvert B=1) \cdot p(B=1) + p(C=R \lvert B=2) \cdot p(B=2) = 0.4 \cdot 0.5 + \frac{3}{7}\cdot 0.5 = 0.41428$\\
@@ -83,9 +83,11 @@
  One problem is the sensitivity to outliers. In the particular case of the disparity map, this could mean our model would have a hard time with  occlusions. Another problem is the assumption of Gaussian noise, which could not be the case. We could be dealing with a particular lighting condition noise in one part of the image or other effects against our brightness constancy assumption.  Ideally we would look for more robust likelihood functions. We could for example build a likelihood function based on the General Adaptive Robust Loss Function [Barron, CVPR 2019] by expressing the loss function as a negative log-likelihood of our likelihood function, shifting and normalizing. There are also patch-based likelihood functions such as the normalized cross correlation.
 
 	\section*{Problem 2.3)}
- We assume a kind of disparity smoothness, where neighboring pixels should have similar disparity values. That assumption is based on the real life knowledge that points in the same surface tend to have similar depth. In particular, the Markov assumption is that a pixel's disparity value is independent of all other pixels given its 4 neighbours. In the figure ${d}_{3}$ is not in the Markov blanket of ${d}_{1}$ because they are not direct neighbours. We would need ${d}_{0}$, ${d}_{2}$, ${d}_{5}$, ${c}_{1}$, ${c}_{3}$, ${e}_{1}$, ${e}_{3}$. Where "c" is the row above d and "e" the row below.
+ We assume a kind of disparity smoothness, where neighboring pixels should have similar disparity values. That assumption is based on the real life knowledge that points in the same surface tend to have similar depth. In particular, the Markov assumption is that a pixel's disparity value is independent of all other pixels given its 4 neighbours. In the figure ${d}_{3}$ is not in the Markov blanket of ${d}_{1}$ because they are not direct neighbours. We would need ${d}_{0}$, ${d}_{2}$, ${d}_{4}$, ${c}_{1}$, ${c}_{3}$, ${e}_{1}$, ${e}_{3}$. Where "c" is the row above d and "e" the row below.
 
 	\section*{Problem 2.4)}
  The problem with the Pott's model is that it's not differentiable. Which means we cannot use the gradient to optimize the log-prior for probabilistic inference of the disparity posterior. We could instead use other robust functions such as the Lorentzian or the Student-t, those are differentiable.
+ 
+ 	\section*{Problem 3.9)}
 	
 \end{document}
