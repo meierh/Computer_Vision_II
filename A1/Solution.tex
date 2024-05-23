@@ -56,7 +56,9 @@
 	$p(y \lvert z,x) = \frac{p(y,z,x)}{p(z,x)} $\\
 	Insert into initial equation\\
 	$\frac{p(z,y,x)}{p(y,x)}  = \frac{p(y,z,x)p(z \lvert x)}{p(z,x) p(y \lvert x)} $\\
-	Re-arange\\
+	Divide by $p(x,y,z)$\\
+	$\frac{1}{p(y,x)}  = \frac{p(z \lvert x)}{p(z,x) p(y \lvert x)} $\\
+	Re-arange (multiply with $p(z , x)$)\\
 	$\frac{p(z,x)}{p(y,x)}  = \frac{p(z \lvert x)}{p(y \lvert x)} $\\
 	Multiply with $\frac{p(x)}{p(x)}$\\
 	$\frac{p(z,x)}{p(y,x)}\frac{p(x)}{p(x)}  = \frac{p(z \lvert x)}{p(y \lvert x)}\frac{p(x)}{p(x)} $\\
@@ -76,18 +78,41 @@
 	$p(B=2) = 0.5$\\
 	$p(C=R) = p(C=R \lvert B=1) \cdot p(B=1) + p(C=R \lvert B=2) \cdot p(B=2) = 0.4 \cdot 0.5 + \frac{3}{7}\cdot 0.5 = 0.41428$\\
 	$p(B=1 \lvert C=R) = \frac{p(C=R \lvert B=1)p(B=1)}{p(C=R)} = \frac{0.4 \cdot 0.5}{0.41428} = 0.482758$\\
+	\newpage
 	\section*{Problem 2.1)}
- Here we make a key assumption about  independence. We are assuming that given the disparity, there is a one-to-one correspondence between the pixels from image 0 and the pixels from image 1. We can justify it because in real life each point in the scene typically projects to one point in each of the two images. Certain exceptions such as occlusions are in this case ignored.
+ 	Here we make a key assumption about  independence. We are assuming that given the disparity, there is a one-to-one correspondence between the pixels from image 0 and the pixels from image 1. We can justify it because in real life each point in the scene typically projects to one point in each of the two images. Certain exceptions such as occlusions are in this case ignored.
 	
 	\section*{Problem 2.2)}
- One problem is the sensitivity to outliers. In the particular case of the disparity map, this could mean our model would have a hard time with  occlusions. Another problem is the assumption of Gaussian noise, which could not be the case. We could be dealing with a particular lighting condition noise in one part of the image or other effects against our brightness constancy assumption.  Ideally we would look for more robust likelihood functions. We could for example build a likelihood function based on the General Adaptive Robust Loss Function [Barron, CVPR 2019] by expressing the loss function as a negative log-likelihood of our likelihood function, shifting and normalizing. There are also patch-based likelihood functions such as the normalized cross correlation.
+ 	One problem is the sensitivity to outliers. In the particular case of the disparity map, this could mean our model would have a hard time with  occlusions. Another problem is the assumption of Gaussian noise, which could not be the case. We could be dealing with a particular lighting condition noise in one part of the image or other effects against our brightness constancy assumption.  Ideally we would look for more robust likelihood functions. We could for example build a likelihood function based on the General Adaptive Robust Loss Function [Barron, CVPR 2019] by expressing the loss function as a negative log-likelihood of our likelihood function, shifting and normalizing. There are also patch-based likelihood functions such as the normalized cross correlation.
 
 	\section*{Problem 2.3)}
- We assume a kind of disparity smoothness, where neighboring pixels should have similar disparity values. That assumption is based on the real life knowledge that points in the same surface tend to have similar depth. In particular, the Markov assumption is that a pixel's disparity value is independent of all other pixels given its 4 neighbours. In the figure ${d}_{3}$ is not in the Markov blanket of ${d}_{1}$ because they are not direct neighbours. We would need ${d}_{0}$, ${d}_{2}$, ${d}_{4}$, ${c}_{1}$, ${c}_{3}$, ${e}_{1}$, ${e}_{3}$. Where "c" is the row above d and "e" the row below.
+ 	We assume a kind of disparity smoothness, where neighboring pixels should have similar disparity values. That assumption is based on the real life knowledge that points in the same surface tend to have similar depth. In particular, the Markov assumption is that a pixel's disparity value is independent of all other pixels given its 4 neighbours. In the figure ${d}_{3}$ is not in the Markov blanket of ${d}_{1}$ because they are not direct neighbours. We would need ${d}_{0}$, ${d}_{2}$, ${d}_{4}$, ${c}_{1}$, ${c}_{3}$, ${e}_{1}$, ${e}_{3}$. Where "c" is the row above d and "e" the row below.
 
 	\section*{Problem 2.4)}
- The problem with the Pott's model is that it's not differentiable. Which means we cannot use the gradient to optimize the log-prior for probabilistic inference of the disparity posterior. We could instead use other robust functions such as the Lorentzian or the Student-t, those are differentiable.
+	The problem with the Pott's model is that it's not differentiable. Which means we cannot use the gradient to optimize the log-prior for probabilistic inference of the disparity posterior. We could instead use other robust functions such as the Lorentzian or the Student-t, those are differentiable.
  
+ 	\newpage
+ 	\section*{Problem 3.5)}
+ 	Derivation of negative gaussian log likelihood\\
+ 	$- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = - \log \left( \Pi_{i,j} \mathcal{N}\left( I^0 _{i,j} - I^1 _{i,j - d_{i,j}} \lvert \mu , \sigma \right) \right) = - \sum_{i,j} \log \left(\mathcal{N}\left( I^0 _{i,j} - I^1 _{i,j - d_{i,j}} \lvert \mu , \sigma \right)\right)$\\
+ 	$- \sum_{i,j} \log \left(\mathcal{N}\left( I^0 _{i,j} - I^1 _{i,j - d_{i,j}} \lvert \mu , \sigma \right)\right) = - \sum_{i,j} \log \left( \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right)$\\
+  	$- \sum_{i,j} \log \left( \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right) = - \sum_{i,j} \left( \log \left( \frac{1}{\sigma \sqrt{2\pi}}\right) + \left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right)$
+ 	\section*{Problem 3.6)}
+  	Derivation of negative laplacian log likelihood\\
+ 	$- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = - \log \left( \Pi_{i,j} \left( \frac{1}{s} \exp \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) = - \left( \sum_{i,j} \log \left( \frac{1}{s} \exp \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) $\\
+	 $- \left( \sum_{i,j} \log \left( \frac{1}{s} \exp \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) = - \left( \sum_{i,j} \left( \log \left( \frac{1}{s}\right) + \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) $\\
  	\section*{Problem 3.9)}
+ 	The absolute negative log likelihood is larger for the gaussian error function in comparison with the laplacian error function for the same level of noise.\\
+ 	\begin{center}
+ 	\begin{tabular}{ | l | l | l | }
+ 		\hline
+ 		noise  & negative gaussian log likelihood & negative laplacian log likelihood \\ \hline
+ 		0.0 & 110588.32 & 95632.56 \\ \hline   
+ 		14.0 & 110819.97 (+0.209\%) & 97193.16 (+1.632\%) \\ \hline
+  		27.0 & 111028.55 (+0.398\%) & 98601.04 (+3.104\%) \\ \hline
+ 	\end{tabular}
+ 	\end{center}
+ 	A rising level of noise leads to a steeper increase of the nll in the case of the laplacian function. This leads to the conclusion that using the laplacian function leads to a stronger influence of noise on the likelihood.
+ 	As a result one might conclude that the approach using the gaussian function is more robust regarding outliers than the one using the laplacian function.
 	
 \end{document}
