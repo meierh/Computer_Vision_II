@@ -96,11 +96,17 @@
  	Derivation of negative gaussian log likelihood\\
  	$- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = - \log \left( \Pi_{i,j} \mathcal{N}\left( I^0 _{i,j} - I^1 _{i,j - d_{i,j}} \lvert \mu , \sigma \right) \right) = - \sum_{i,j} \log \left(\mathcal{N}\left( I^0 _{i,j} - I^1 _{i,j - d_{i,j}} \lvert \mu , \sigma \right)\right)$\\
  	$- \sum_{i,j} \log \left(\mathcal{N}\left( I^0 _{i,j} - I^1 _{i,j - d_{i,j}} \lvert \mu , \sigma \right)\right) = - \sum_{i,j} \log \left( \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right)$\\
-  	$- \sum_{i,j} \log \left( \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right) = - \sum_{i,j} \left( \log \left( \frac{1}{\sigma \sqrt{2\pi}}\right) + \left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right)$
+  	$- \sum_{i,j} \log \left( \frac{1}{\sigma \sqrt{2\pi}} \exp\left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right) = - \sum_{i,j} \left( \log \left( \frac{1}{\sigma \sqrt{2\pi}}\right) + \left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right)$\\
+  	$- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = - \sum_{i,j} \left( \log \left( \frac{1}{\sigma \sqrt{2\pi}}\right) + \left(-0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)\right)$\\
+    $- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = \sum_{i,j} \left(  \log \left( \sigma \sqrt{2\pi} \right) + 0.5 \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2\right)$\\
+    $- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = \sum_{i,j} \left(  \log \left( \sigma \sqrt{2\pi} \right)\right) + 0.5 \sum_{i,j} \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2$\\
+    $- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = 0.5 \sum_{i,j} \left(\frac{I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu}{\sigma}\right)^2 + \sum_{i,j} \left(  \log \left( \sigma \sqrt{2\pi} \right)\right)$\\
  	\section*{Problem 3.6)}
   	Derivation of negative laplacian log likelihood\\
  	$- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = - \log \left( \Pi_{i,j} \left( \frac{1}{s} \exp \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) = - \left( \sum_{i,j} \log \left( \frac{1}{s} \exp \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) $\\
 	 $- \left( \sum_{i,j} \log \left( \frac{1}{s} \exp \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) = - \left( \sum_{i,j} \left( \log \left( \frac{1}{s}\right) + \left( -\frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right)\right) $\\
+	 $- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = \sum_{i,j} \left( \log \left( s \right) + \left( \frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right) $\\
+	 $- \log \left( p(\textbf{I}^1 \vert \textbf{I}^0, \textbf{d})\right) = \sum_{i,j} \left( \log \left( s \right) + \left( \frac{ \lvert I^0 _{i,j} - I^1 _{i,j - d_{i,j}} - \mu \lvert}{s} \right) \right) $\\
  	\section*{Problem 3.9)}
  	The absolute negative log likelihood is larger for the gaussian error function in comparison with the laplacian error function for the same level of noise.\\
  	\begin{center}
@@ -112,7 +118,9 @@
   		27.0 & 111028.55 (+0.398\%) & 98601.04 (+3.104\%) \\ \hline
  	\end{tabular}
  	\end{center}
+ 	The percentages in the above table are always computed in reference to the value for the noise $0.0$.\\
  	A rising level of noise leads to a steeper increase of the nll in the case of the laplacian function. This leads to the conclusion that using the laplacian function leads to a stronger influence of noise on the likelihood.
- 	As a result one might conclude that the approach using the gaussian function is more robust regarding outliers than the one using the laplacian function.
+ 	As a result one might conclude that the approach using the gaussian function is more robust regarding outliers than the one using the laplacian function.\\
+ 	This is unexpected because a laplacian distribution is in general thought to have a higher probability for values further away from the expectation. On the other hand this is dependend on the parameters of the specific laplacian and the gaussian distribution. 
 	
 \end{document}
