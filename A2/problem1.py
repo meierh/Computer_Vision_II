@@ -13,7 +13,7 @@ def load_data(gt_path):
     Returns:
         g_t: numpy array of shape (H, W)
     """
-	g_t = (np.array(Image.open(gt_path)).astype(np.float64) / 255.0) * 16
+    g_t = (np.array(Image.open(gt_path)).astype(np.float64) / 255.0) * 16
     return g_t
 
 def random_disparity(disparity_size):
@@ -26,7 +26,7 @@ def random_disparity(disparity_size):
         disparity_map: numpy array of shape (H, W)
 
     """
-    disparity_map = np.random.randint(0,15,disparity_size)
+    disparity_map = np.random.randint(0, 15, disparity_size)
     return disparity_map
 
 def constant_disparity(disparity_size, a):
@@ -56,7 +56,7 @@ def log_gaussian(x, mu, sigma):
         result: numpy array of shape (H, W) (np.float64)
 
     """
-    result = - ((x-mu)**2)/(2*sigma**2)
+    result = - ((x-mu)**2)/(2*sigma**2) # here we are not including the constant -0.5 * np.log(2 * np.pi * sigma**2) because we are following a definition from the lecture slides where this constant is not given
     return result
 
 
@@ -72,9 +72,14 @@ def mrf_log_prior(x, mu, sigma):
         logp: float
 
     """
-    x_i_diff = np.diff(x,n=1,axis=1)
-    y_i_diff = np.diff(x,n=1,axis=0)
-    logp = np.sum(x_i_diff)+np.sum(y_i_diff)
+    x_i_diff = np.diff(x, n=1, axis=1)
+    y_i_diff = np.diff(x, n=1, axis=0)
+    
+    # gaussian potentials
+    x_i_potential = np.sum(log_gaussian(x_i_diff, mu, sigma))
+    y_i_potential = np.sum(log_gaussian(y_i_diff, mu, sigma))
+    
+    logp = x_i_potential + y_i_potential
     return logp
 
 # Example usage in main()
