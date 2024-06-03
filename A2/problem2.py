@@ -21,8 +21,8 @@ def rgb2gray(rgb):
         gray: numpy array of shape (H, W)
 
     """
-	weights = np.array([0.2126, 0.7152, 0.0722])
-	gray = np.dot(rgb[...,:3], weights)
+    weights = np.array([0.2126, 0.7152, 0.0722])
+    gray = np.dot(rgb[...,:3], weights)
     return gray
 
 
@@ -40,9 +40,9 @@ def load_data(i0_path, i1_path, gt_path):
         i_1: numpy array of shape (H, W)
         g_t: numpy array of shape (H, W)
     """
-	i_0 = np.array(Image.open(i0_path)).astype(np.float64) / 255.0
-	i_1 = np.array(Image.open(i1_path)).astype(np.float64) / 255.0
-	g_t = (np.array(Image.open(gt_path)).astype(np.float64) / 255.0) * 16
+    i_0 = np.array(Image.open(i0_path)).astype(np.float64) / 255.0
+    i_1 = np.array(Image.open(i1_path)).astype(np.float64) / 255.0
+    g_t = (np.array(Image.open(gt_path)).astype(np.float64) / 255.0) * 16
     return i_0, i_1, g_t
 
 def log_gaussian(x,  mu, sigma):
@@ -58,7 +58,8 @@ def log_gaussian(x,  mu, sigma):
     """
     # return the value and the gradient
     value = np.log(np.sqrt(2*np.pi*sigma**2)) + -0.5*((x-mu)/sigma)**2
-    grad = ((x-mu)*mu)/(sigma**2)
+    #grad = ((x-mu)*mu)/(sigma**2)
+    grad = -(x - mu) / sigma**2
     return value, grad
 
 def stereo_log_prior(x, mu, sigma):
@@ -71,7 +72,22 @@ def stereo_log_prior(x, mu, sigma):
         value: value of the log-prior
         grad: gradient of the log-prior w.r.t. x
     """
-
+    value = mrf_log_prior(x, mu, sigma) # log of the unnormalized MRF prior density
+    
+    # gradient of the log-density
+    x_i_diff = np.diff(x, n=1, axis=1)
+    y_i_diff = np.diff(x, n=1, axis=0)
+    
+    _, grad_x = log_gaussian(x_i_diff, mu, sigma)
+    _, grad_y = log_gaussian(y_i_diff, mu, sigma)
+    
+    # total gradient
+    grad = np.zeros_like(x)
+    grad[:, :-1] -= grad_x
+    grad[:, 1:] += grad_x
+    grad[:-1, :] -= grad_y
+    grad[1:, :] += grad_y
+    return  value, grad
     return  value, grad
 
 def shift_interpolated_disparity(im1, d):
