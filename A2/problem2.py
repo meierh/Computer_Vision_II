@@ -4,10 +4,13 @@ from scipy import interpolate   # Use this for interpolation
 from scipy import signal        # Feel free to use convolutions, if needed
 from scipy import optimize      # For gradient-based optimisation
 from PIL import Image           # For loading images
+from scipy.interpolate import RegularGridInterpolator
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
+from skimage.transform import pyramid_gaussian, resize
 
 # for experiments with different initialisation
-from problem1 import random_disparity
-from problem1 import constant_disparity
+from problem1 import random_disparity, mrf_log_prior, constant_disparity
 
 
 def rgb2gray(rgb):
@@ -72,23 +75,21 @@ def stereo_log_prior(x, mu, sigma):
         value: value of the log-prior
         grad: gradient of the log-prior w.r.t. x
     """
-    value = mrf_log_prior(x, mu, sigma) # log of the unnormalized MRF prior density
-    
+    x=x.astype(np.float64)
+    value = mrf_log_prior(x, mu, sigma)  # log of the unnormalized MRF prior density
     # gradient of the log-density
     x_i_diff = np.diff(x, n=1, axis=1)
     y_i_diff = np.diff(x, n=1, axis=0)
-    
+
     _, grad_x = log_gaussian(x_i_diff, mu, sigma)
     _, grad_y = log_gaussian(y_i_diff, mu, sigma)
-    
     # total gradient
     grad = np.zeros_like(x)
-    grad[:, :-1] -= grad_x
-    grad[:, 1:] += grad_x
+    grad[:, :-1] -= grad_x # subtracts the gradient contribution from the left pixel to the right pixel
+    grad[:, 1:] += grad_x # adds the gradient contribution from the left pixel to the right pixel to the right pixel
     grad[:-1, :] -= grad_y
     grad[1:, :] += grad_y
-    return  value, grad
-    return  value, grad
+    return value, grad
 
 def shift_interpolated_disparity(im1, d):
     """Shift image im1 by the disparity value d.
@@ -101,8 +102,17 @@ def shift_interpolated_disparity(im1, d):
     Returns:
         im1_shifted: Shifted version of im1 by the disparity value.
     """
-
-    return shifted_im1
+    height, width = im1.shape
+    x, y = np.meshgrid(np.arange(width), np.arange(height))  # create a grid of pixel indices
+    # subtract the disparity map from the x indices since we are dealing with horizontal shifts between the left and right images
+    x = x - d
+    # ensure we won't try to access pixels that are outside the boundaries of the image
+    x = np.clip(x, 0, width - 1)
+    y = np.clip(y, 0, height - 1)
+    interpolator = RegularGridInterpolator((np.arange(height), np.arange(width)), im1, method='linear', fill_value=0)
+    coords = np.stack((y, x), axis=-1)
+    im1_shifted = interpolator(coords)
+    return im1_shifted
 
 def stereo_log_likelihood(x, im0, im1, mu, sigma):
     """Evaluate gradient of the log likelihood.
@@ -119,7 +129,19 @@ def stereo_log_likelihood(x, im0, im1, mu, sigma):
     Hint: Make use of shift_interpolated_disparity and log_gaussian
     """
 
+    # Shift the second image according to the disparity map
+    im1_shifted = shift_interpolated_disparity(im1, x)
+    # Calculate the difference between the first image and the shifted second image
+    diff = im0 - im1_shifted
+    # Calculate the log-density (log-likelihood) and its gradient
+    log_likelihood, grad_log_likelihood = log_gaussian(diff, mu, sigma)
+
+    # Sum the log-likelihood values for the total log-likelihood
+    value = np.sum(log_likelihood)
+    grad = grad_log_likelihood * (im1_shifted - np.roll(im1_shifted, 1, axis=1))
+
     return value, grad
+
 
 
 def stereo_log_posterior(d, im0, im1, mu, sigma, alpha):
@@ -134,8 +156,14 @@ def stereo_log_posterior(d, im0, im1, mu, sigma, alpha):
         value: value of the log-posterior
         grad: gradient of the log-posterior w.r.t. x
     """
-
-    return log_posterior, log_posterior_grad
+    d = d.reshape(im0.shape)
+    likelihood, likelihood_grad = stereo_log_likelihood(d,im0,im1,mu,sigma)
+    prior, prior_grad = stereo_log_prior(d,mu,sigma)
+    log_posterior = likelihood+alpha*prior
+    value = -log_posterior.sum()
+    log_posterior_grad = likelihood_grad+alpha*prior_grad
+    grad = -log_posterior_grad.flatten()
+    return value, grad
 
 
 def optim_method():
@@ -144,7 +172,7 @@ def optim_method():
     to work well.
     This is graded with 1 point unless the choice is arbitrary/poor.
     """
-    return None
+    return "L-BFGS-B"
 
 def stereo(d0, im0, im1, mu, sigma, alpha, method=optim_method()):
     """Estimating the disparity map
@@ -157,8 +185,11 @@ def stereo(d0, im0, im1, mu, sigma, alpha, method=optim_method()):
     Returns:
         d: numpy.float 2d-array estimated value of the disparity
     """
+    # Run the optimization
 
-    return d0
+    result = minimize(stereo_log_posterior, d0.flatten(), args=(im0, im1, mu, sigma, alpha), method=method, jac=True)
+    d = result.x.reshape(im0.shape)
+    return d
 
 def coarse2fine(d0, im0, im1, mu, sigma, alpha, num_levels):
     """Coarse-to-fine estimation strategy. Basic idea:
@@ -178,8 +209,23 @@ def coarse2fine(d0, im0, im1, mu, sigma, alpha, num_levels):
         Sanity check: pyramid[0] contains the finest level (highest resolution)
                       pyramid[-1] contains the coarsest level
     """
+    pyramid0 = list(pyramid_gaussian(im0, max_layer=num_levels-1, downscale=2.5))
+    pyramid1 = list(pyramid_gaussian(im1, max_layer=num_levels-1, downscale=2.5))
+    pyramid = [None] * num_levels
+    pyramid[-1] = resize(d0, pyramid0[-1].shape, mode='reflect', anti_aliasing=True)
 
-    return []
+    for level in range(num_levels-1, -1, -1):
+        im0_level = pyramid0[level]
+        im1_level = pyramid1[level]
+        d_init = pyramid[level]
+        d_optimized = stereo(d_init, im0_level, im1_level, mu, sigma, alpha)
+        pyramid[level] = d_optimized
+
+        if level > 0:
+            d_upscale = resize(d_optimized, pyramid0[level-1].shape, mode='reflect', anti_aliasing=True) * 2
+            pyramid[level-1] = d_upscale
+
+    return pyramid
 
 # Example usage in main()
 # Feel free to experiment with your code in this function
@@ -208,7 +254,7 @@ def main():
 
     # Pyramid
     num_levels = 3
-    pyramid = coarse2fine(d0, im0, im1, mu, sigma, num_levels)
+    pyramid = coarse2fine(d0, im0, im1, mu, sigma, alpha, num_levels)
 
 if __name__ == "__main__":
     main()
