@@ -90,19 +90,47 @@ def main():
     gt = load_data('./data/gt.png')
 
     # Display log prior of GT disparity map
-    logp = mrf_log_prior(gt, mu=0, sigma=1.1)
+    logp = mrf_log_prior(gt, mu=0, sigma=3.1)
     print("Log Prior of GT disparity map:", logp)
 
     # Display log prior of random disparity ma
     random_disp = random_disparity(gt.shape)
-    logp = mrf_log_prior(random_disp, mu=0, sigma=1.1)
+    logp = mrf_log_prior(random_disp, mu=0, sigma=3.1)
     print("Log-prior of noisy disparity map:",logp)
 
     # Display log prior of constant disparity map
     constant_disp = constant_disparity(gt.shape, 6)
-    logp = mrf_log_prior(constant_disp, mu=0, sigma=1.1)
+    logp = mrf_log_prior(constant_disp, mu=0, sigma=3.1)
     print("Log-prior of constant disparity map:", logp)
 
 if __name__ == "__main__":
 	main()
+
+'''
+The log prior of the constant disparity is zero. This is expected because there is no difference between disparity in different pixels and the prior is based on a pixel wise substraction of these disparities
+
+The log prior of the random disparity is smaller than for the ground truth. This can be explained by the fact that the differences between neighbouring pixels are larger due to their random values. The ground truth values have more similiarity in their neighbourhood.
+
+Varying the variance of the gaussian leads to smaller log prior for smaller values of sigma and vice versa. This is expected due to the fact that values that are more spread out have a higher probability given a higher variance and a smaller probability given a lower variance
+
+sigma = 0.1
+Log Prior of GT disparity map: -24144.90426758938
+Log-prior of noisy disparity map: -411079799.99999994
+Log-prior of constant disparity map: 0.0
+
+sigma = 1.1
+Log Prior of GT disparity map: -199.54466336850732
+Log-prior of noisy disparity map: -3397353.719008263
+Log-prior of constant disparity map: 0.0
+
+sigma = 2.1
+Log Prior of GT disparity map: -54.750349813127855
+Log-prior of noisy disparity map: -932153.7414965986
+Log-prior of constant disparity map: 0.0
+
+sigma = 3.1
+Log Prior of GT disparity map: -25.124770309666374
+Log-prior of noisy disparity map: -427762.5390218522
+Log-prior of constant disparity map: 0.0
+'''
 
