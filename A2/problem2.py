@@ -76,6 +76,7 @@ def stereo_log_prior(x, mu, sigma):
         grad: gradient of the log-prior w.r.t. x
     """
     x=x.astype(np.float64)
+    
     value = mrf_log_prior(x, mu, sigma)  # log of the unnormalized MRF prior density
     # gradient of the log-density
     x_i_diff = np.diff(x, n=1, axis=1)
@@ -85,10 +86,13 @@ def stereo_log_prior(x, mu, sigma):
     _, grad_y = log_gaussian(y_i_diff, mu, sigma)
     # total gradient
     grad = np.zeros_like(x)
-    grad[:, :-1] -= grad_x # subtracts the gradient contribution from the left pixel to the right pixel
+    
+    grad[:, :grad.shape[1]-1] += grad_x # assigns the gradient contribution from the left pixel to the right pixel
     grad[:, 1:] += grad_x # adds the gradient contribution from the left pixel to the right pixel to the right pixel
-    grad[:-1, :] -= grad_y
+
+    grad[:grad.shape[0]-1, :] += grad_y
     grad[1:, :] += grad_y
+    
     return value, grad
 
 def shift_interpolated_disparity(im1, d):
