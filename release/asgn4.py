@@ -46,9 +46,9 @@ class VOC2007Dataset(Dataset):
         self.target_filenames = []
 
         if train:
-            filename = os.path.join(root, 'ImSets/Segmentation/train.txt')
+            filename = os.path.join(root, 'ImageSets/Segmentation/train.txt')
         else:
-            filename = os.path.join(root, 'ImSets/Segmentation/val.txt')
+            filename = os.path.join(root, 'ImageSets/Segmentation/val.txt')
 
         with open(filename, 'r') as file:
             list = file.readlines()
