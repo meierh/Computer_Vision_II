@@ -11,12 +11,12 @@ from torch.utils.data import DataLoader
 from torch.utils.data import Dataset
 
 from matplotlib import pyplot as plt
-from skim import color
+from skimage import color 
 
-from utils import VOC_LABEL2COLOR
-from utils import VOC_STATISTICS
 from utils import numpy2torch
 from utils import torch2numpy
+from utils import VOC_LABEL2COLOR
+from utils import VOC_STATISTICS
 
 from torchvision import models
 
@@ -77,23 +77,23 @@ class VOC2007Dataset(Dataset):
         item = dict()
 
          # image reading
-        img_path = self.input_filenames[index]
-        img = plt.imread(img_path).astype(np.float32)
-        img = numpy2torch(img)
+        im_path = self.input_filenames[index]
+        im = plt.imread(im_path).astype(np.float32)
+        im = numpy2torch(im)
 
         # segmentation reading
-        segm_path = self.target_filenames[index]
-        segm = plt.imread(segm_path)
-        segm = (segm[:, :, 0:3] * 255).astype(np.int64)
+        seg_path = self.target_filenames[index]
+        seg = plt.imread(seg_path)
+        seg = (seg[:, :, 0:3] * 255).astype(np.int64)
 
         # segmentation conversion
-        conv = np.full(segm.shape[:2], -1, dtype=np.int64) # ambiguous labels represented by label -1
+        conv = np.full(seg.shape[:2], -1, dtype=np.int64) # ambiguous labels represented by label -1
         for label, rgb in enumerate(self.rgb2label):
-            mask = np.all(segm == rgb, axis=2)
+            mask = np.all(seg == rgb, axis=2)
             conv[mask] = label
         conv = numpy2torch(conv)
 
-        item['im'] = img
+        item['im'] = im
         item['gt'] = conv
 
         assert (isinstance(item, dict))
@@ -151,11 +151,11 @@ def voc_label2color(np_im, np_label):
 
     for label_id, rgb in enumerate(VOC_LABEL2COLOR):
         mask = (np_label == label_id).reshape((np_label.shape[0], np_label.shape[1]))
-        color = color.rgb2hsv(np.array(rgb).reshape((1, 1, 3)))
+        hsv_color = color.rgb2hsv(np.array(rgb).reshape((1, 1, 3)))
 
         # hue channel
-        hsv_im[..., 0][mask] = color[0, 0, 0]
-        hsv_im[..., 1][mask] = color[0, 0, 1]
+        hsv_im[..., 0][mask] = hsv_color[0, 0, 0]
+        hsv_im[..., 1][mask] = hsv_color[0, 0, 1]
 
     colored = color.hsv2rgb(hsv_im) # hsv to rgb
 
@@ -174,7 +174,31 @@ def show_dataset_examples(loader, grid_height, grid_width, title):
         grid_width: int
         title: string
     """
-    pass
+    figure, axes = plt.subplots(grid_height, grid_width, figsize=(10, 10))
+    figure.suptitle(title)
+
+    for i in range(grid_height * grid_width):
+        data = loader.dataset[i]
+        im = data['im']
+        label = data['gt']
+
+        # conversion to numpy arrays
+        np_im = torch2numpy(im)
+        np_label = torch2numpy(label)
+
+        # label colors
+        colored_im = voc_label2color(np_im, np_label)
+
+        # display
+        row = i // grid_width
+        col = i % grid_width
+        axes[row, col].imshow(colored_im.astype(np.uint8))
+        axes[row, col].axis('off')
+        if i + 1 == grid_height * grid_width:
+            break
+
+    plt.show()
+    return
 
 def normalize_input(input_tensor):
     """
