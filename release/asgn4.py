@@ -57,7 +57,7 @@ class VOC2007Dataset(Dataset):
 
         for filename in list:
             filename = filename.strip() # removes whitespace characters from the filename string
-            self.input_filenames.append(os.path.join(root, 'JPEGIms', filename + '.jpg'))
+            self.input_filenames.append(os.path.join(root, 'JPEGImages', filename + '.jpg'))
             self.target_filenames.append(os.path.join(root, 'SegmentationClass', filename + '.png'))
 
         self.rgb2label = VOC_LABEL2COLOR
