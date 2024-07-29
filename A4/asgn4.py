@@ -210,17 +210,15 @@ def normalize_input(input_tensor):
     Returns:
         normalized: torch tensor (B,3,H,W) (float32)
     """
-    assert (torch.is_tensor(input_tensor))
-    assert (len(input_tensor.size()) == 4)
-    (B,_,H,W) = input_tensor.size()
     
-    normalized = torch.zeros(input_tensor.shape)
-    for d in range(3):
-        normalized[:,d,:,:] = (input_tensor[:,d,:,:]-VOC_STATISTICS["mean"][d])/VOC_STATISTICS["std"][d]
+    # normalization to [0, 1]
+    normalized = (input_tensor - torch.min(input_tensor)) / (torch.max(input_tensor) - torch.min(input_tensor))
+
+    # standardization
+    normalized = (normalized - torch.tensor(VOC_STATISTICS['mean']).reshape(1, 3, 1, 1)) / torch.tensor(VOC_STATISTICS['std']).reshape(1, 3, 1, 1)
         
     assert (type(input_tensor) == type(normalized))
     assert (input_tensor.size() == normalized.size())
-    assert(normalized.size()==(B,3,H,W))
 
     return normalized
 
