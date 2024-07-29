@@ -266,18 +266,11 @@ def show_inference_examples(loader, model, grid_height, grid_width, title):
         im = data['im']
         labelgt = data['gt']
         pred,acts = run_forward_pass(normalize_input(torch.unsqueeze(im,0)),model)
+        expanded_labelgt = torch.unsqueeze(labelgt,0)
 
-        avg_prec += average_precision(pred,torch.unsqueeze(labelgt,0))
-        #avg_prec += average_precision(pred,torch.unsqueeze(labelgt,0))
+        prec = average_precision(pred,expanded_labelgt)
+        avg_prec += prec
         count += 1
-
-        '''
-        Neural network output inspection code
-        limit = 128
-        objClass = 1
-        print(acts[:,objClass,:,:])
-        label = torch.where(acts[:,objClass,:,:]>limit,1.0,2.0)
-        '''
         
         label = pred[0,:,:,:]
 
@@ -297,7 +290,7 @@ def show_inference_examples(loader, model, grid_height, grid_width, title):
             break
         
     avg_prec /= count
-    figure.suptitle(title+" "+str(avg_prec)+"%")
+    figure.suptitle(title+"  / matching pixels:"+str(avg_prec.item()*100)+"%")
 
     plt.show()
     return
@@ -322,9 +315,10 @@ def average_precision(prediction, gt):
     difference = torch.abs(difference)
     difference = torch.where(difference>0, 1, 0)
     sum_nonMatching = torch.sum(difference)
+    sum_Matching = (B*H*W) - sum_nonMatching
+    perc_Matching = sum_Matching / (B*H*W)
     
-    avg_prec = torch.tensor(sum_nonMatching,dtype=torch.float32)
-    avg_prec = avg_prec / (B*H*W)    
+    avg_prec = torch.tensor(perc_Matching,dtype=torch.float32)
     
     return avg_prec
 
@@ -344,8 +338,8 @@ def main():
     valid_loader = create_loader(valid_dataset, batch_size=1, shuffle=False, num_workers=1)
 
     # show some ims for the training and validation set
-    #show_dataset_examples(train_loader, grid_height=2, grid_width=3, title='training examples')
-    #show_dataset_examples(valid_loader, grid_height=2, grid_width=3, title='validation examples')
+    show_dataset_examples(train_loader, grid_height=2, grid_width=3, title='training examples')
+    show_dataset_examples(valid_loader, grid_height=2, grid_width=3, title='validation examples')
 
     # Load FCN network
     model = models.segmentation.fcn_resnet101(pretrained=True, num_classes=21)
